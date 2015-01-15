@@ -47,6 +47,10 @@
 #import "LKLdapCategory.h"
 #import "LKMod.h"
 
+// import for using ldap_pvt_tls_set_option
+#import <portable.h>
+#import <ldap_pvt.h>
+
 
 #pragma mark - Data Types
 struct ldap_kit_ldap_auth_data
@@ -518,6 +522,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
    [ldapCACertificateFile release];
    ldapEncryptionScheme  = session.ldapEncryptionScheme;
    ldapCACertificateFile = [session.ldapCACertificateFile retain];
+   isLdapCACertificateCheckDisabled = session.isLdapCACertificateCheckDisabled;
 
    // timeout information
    ldapSearchSizeLimit = session.ldapSearchSizeLimit;
@@ -1169,7 +1174,17 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
          ldap_unbind_ext_s(ld, NULL, NULL);
          return(NULL);
       };
-   };
+   }
+   else if (isLdapCACertificateCheckDisabled) {
+       int never = LDAP_OPT_X_TLS_NEVER;
+       int err = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_REQUIRE_CERT, &never);
+       if (err != LDAP_SUCCESS) {
+           [self resetErrorWithTitle:@"Reset LDAP_OPT_X_TLS_REQUIRE_CERT error" andCode:err];
+           ldap_unbind_ext_s(ld, NULL, NULL);
+           
+           return(NULL);
+       }
+   }
 
    // check for cancelled operation
    if ((self.isCancelled))

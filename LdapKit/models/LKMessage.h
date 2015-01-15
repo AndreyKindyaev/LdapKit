@@ -95,6 +95,7 @@ typedef enum ldap_kit_ldap_message_type LKLdapMessageType;
    // encryption information
    LKLdapEncryptionScheme   ldapEncryptionScheme;
    NSString               * ldapCACertificateFile;
+   BOOL                     isLdapCACertificateCheckDisabled;
 
    // timeout information
    NSInteger                ldapSearchSizeLimit;

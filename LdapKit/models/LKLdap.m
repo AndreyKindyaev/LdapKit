@@ -64,6 +64,7 @@
 
 // encryption information
 @synthesize ldapEncryptionScheme;
+@synthesize isLdapCACertificateCheckDisabled;
 
 // timeout & limit information
 @synthesize ldapSearchSizeLimit;
@@ -243,6 +244,21 @@
    return;
 }
 
+- (BOOL) isLdapCACertificateCheckDisabled
+{
+    @synchronized(self) {
+        return (isLdapCACertificateCheckDisabled);
+    }
+}
+
+- (void) setisLdapCACertificateCheckDisabled:(BOOL)disabled
+{
+    [self willChangeValueForKey:@"isLdapCACertificateCheckDisabled"];
+    @synchronized(self) {
+        isLdapCACertificateCheckDisabled = disabled;
+    }
+    [self didChangeValueForKey:@"isLdapCACertificateCheckDisabled"];
+}
 
 - (NSData *) ldapBindCredentials
 {

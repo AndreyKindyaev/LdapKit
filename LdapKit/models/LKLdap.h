@@ -61,6 +61,7 @@
    // Encryption Settings
    LKLdapEncryptionScheme   ldapEncryptionScheme;
    NSString               * ldapCACertificateFile;
+   BOOL                     isLdapCACertificateCheckDisabled;
 
    // Timeouts & Limits
    NSInteger                ldapSizeLimit;
@@ -206,6 +207,8 @@
 /// to use TLS or SSL on iOS, this property must be set to a file name which
 /// contains valid certificates.
 @property (nonatomic, copy)     NSString               * ldapCACertificateFile;
+
+@property (nonatomic, assign)   BOOL                     isLdapCACertificateCheckDisabled;
 
 #pragma mark - Timeouts & Limits
 /// @name Timeouts & Limits
