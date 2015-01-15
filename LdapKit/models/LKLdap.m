@@ -43,6 +43,8 @@
 #import "LKMod.h"
 #import "LKUrl.h"
 
+NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
+
 @interface LKLdap ()
 
 /// @name Manages internal state
@@ -549,14 +551,7 @@
 
 - (LKMessage *) ldapBind
 {
-   LKMessage * message;
-   @synchronized(self)
-   {
-      message = [[LKMessage alloc] initBindWithSession:self];
-      message.queuePriority = NSOperationQueuePriorityHigh;
-      [queue addOperation:message];
-      return([message autorelease]);
-   };
+    return [self ldapBindWithSuccess:nil failute:nil];
 }
 
 
@@ -627,24 +622,13 @@
                 filter:(NSString *)filter attributes:(NSArray *)attributes
                 attributesOnly:(BOOL)attributesOnly
 {
-   LKMessage  * message;
-   NSUInteger   pos;
-   NSAssert((dn != nil),         @"dn must not be nil");
-   NSAssert((filter != nil),     @"filter must not be nil");
-   if ((attributes))
-   {
-      for(pos = 0; pos < [attributes count]; pos++)
-         NSAssert([[attributes objectAtIndex:pos] isKindOfClass:[NSString class]],
-            @"attributes must only contain NSString objects");
-   };
-   @synchronized(self)
-   {
-      message = [[LKMessage alloc] initSearchWithSession:self baseDN:dn
-                  scope:scope filter:filter attributes:attributes
-                  attributesOnly:attributesOnly];
-      [queue addOperation:message];
-      return([message autorelease]);
-   };
+    return [self ldapSearchBaseDN:dn
+                            scope:scope
+                           filter:filter
+                       attributes:attributes
+                   attributesOnly:attributesOnly
+                          success:nil
+                          failute:nil];
 }
 
 
@@ -723,13 +707,88 @@
 
 - (LKMessage *) ldapUnbind
 {
-   LKMessage * message;
-   @synchronized(self)
-   {
-      message = [[LKMessage alloc] initUnbindWithSession:self];
-      [queue addOperation:message];
-      return([message autorelease]);
-   };
+    return [self ldapUnbindWithSuccess:nil failute:nil];
+}
+
+#pragma mark - Block based requests
+- (void)addCompletionBlockForMessage:(LKMessage *)message success:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure
+{
+    if (nil != success && nil != failure) {
+        message.completionBlock = ^{
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                if (message.isSuccessful) {
+                    if (nil != success) {
+                        success(message.entries);
+                    }
+                }
+                else {
+                    if (nil != failure) {
+                        NSString *errorMessage = message.errorMessage;
+                        NSError *error = [NSError errorWithDomain:LKLdapErrorDomain
+                                                             code:message.errorCode
+                                                         userInfo:((errorMessage.length > 0)
+                                                                   ? @{NSLocalizedDescriptionKey : errorMessage}
+                                                                   : nil)];
+                        failure(error);
+                    }
+                }
+            });
+        };
+    }
+}
+
+- (LKMessage *)ldapBindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure
+{
+    LKMessage * message;
+    @synchronized(self)
+    {
+        message = [[LKMessage alloc] initBindWithSession:self];
+        message.queuePriority = NSOperationQueuePriorityHigh;
+        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [queue addOperation:message];
+        return([message autorelease]);
+    };
+}
+
+- (LKMessage *)ldapUnbindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure
+{
+    LKMessage * message;
+    @synchronized(self) {
+        message = [[LKMessage alloc] initUnbindWithSession:self];
+        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [queue addOperation:message];
+        return([message autorelease]);
+    }
+}
+
+- (LKMessage *)ldapSearchBaseDN:(NSString *)baseDN
+                          scope:(LKLdapSearchScope)scope
+                         filter:(NSString *)filter
+                     attributes:(NSArray *)attributes
+                 attributesOnly:(BOOL)attributesOnly
+                        success:(LKLdapSuccessBlock)success
+                        failute:(LKLdapFailureBlock)failure
+{
+    LKMessage  * message;
+    NSUInteger   pos;
+    NSAssert((baseDN != nil),         @"dn must not be nil");
+    NSAssert((filter != nil),     @"filter must not be nil");
+    if ((attributes)) {
+        for(pos = 0; pos < [attributes count]; pos++)
+            NSAssert([[attributes objectAtIndex:pos] isKindOfClass:[NSString class]],
+                     @"attributes must only contain NSString objects");
+    };
+    @synchronized(self) {
+        message = [[LKMessage alloc] initSearchWithSession:self
+                                                    baseDN:baseDN
+                                                     scope:scope
+                                                    filter:filter
+                                                attributes:attributes
+                                            attributesOnly:attributesOnly];
+        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [queue addOperation:message];
+        return([message autorelease]);
+    }
 }
 
 @end

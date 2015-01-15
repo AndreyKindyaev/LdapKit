@@ -39,6 +39,8 @@
 #import <Foundation/Foundation.h>
 #import <LdapKit/LKEnumerations.h>
 
+extern NSString * const LKLdapErrorDomain;
+
 @class LKEntry;
 @class LKMessage;
 @class LKMod;
@@ -381,5 +383,19 @@
 /// This will terminate the current connection (if one exists).
 /// @return Returns the LKMessage object executing the unbind request.
 - (LKMessage *) ldapUnbind;
+
+#pragma mark - Block based requests
+typedef void (^LKLdapSuccessBlock)(id responseObject);
+typedef void (^LKLdapFailureBlock)(NSError *error);
+
+- (LKMessage *)ldapBindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure;
+- (LKMessage *)ldapUnbindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure;
+- (LKMessage *)ldapSearchBaseDN:(NSString *)baseDN
+                          scope:(LKLdapSearchScope)scope
+                         filter:(NSString *)filter
+                     attributes:(NSArray *)attributes
+                 attributesOnly:(BOOL)attributesOnly
+                        success:(LKLdapSuccessBlock)success
+                        failute:(LKLdapFailureBlock)failure;
 
 @end
