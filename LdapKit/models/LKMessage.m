@@ -1418,16 +1418,13 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
       [results removeAllObjects];
 
    // sets limits
-   timeout.tv_sec    = 0;
-   timeout.tv_usec   = 250000; // 0.25 seconds
+   timeout.tv_sec  = (messageType == LKLdapMessageTypeSearch) ? session.ldapSearchTimeLimit : 0;
+   timeout.tv_usec = 0;
 
    // loops through results
    msgtype = LDAP_RES_SEARCH_ENTRY;
    while(msgtype == LDAP_RES_SEARCH_ENTRY)
    {
-      // slight pause to prevent race condition
-      usleep(250000);
-
       // verifies operation has not been cancelled
       if ((self.isCancelled))
       {
@@ -1448,13 +1445,11 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
          {
             // encountered an error
             case -1:
+            // timeout was exceeded
+            case 0:
             ldap_get_option(session.ld, LDAP_OPT_RESULT_CODE, &err);
             [self resetErrorWithTitle:@"LDAP Result" andCode:err];
             return(NULL);
-
-            // timeout was exceeded
-            case 0:
-            break;
 
             // result was returned
             default:
