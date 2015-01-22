@@ -397,5 +397,13 @@ typedef void (^LKLdapFailureBlock)(NSError *error);
                  attributesOnly:(BOOL)attributesOnly
                         success:(LKLdapSuccessBlock)success
                         failute:(LKLdapFailureBlock)failure;
+- (LKMessage *)ldapModifyDN:(NSString *)dn
+               modification:(LKMod *)mod
+                    success:(LKLdapSuccessBlock)success
+                    failute:(LKLdapFailureBlock)failure;
+- (LKMessage *)ldapModifyDN:(NSString *)dn
+              modifications:(NSArray *)mods
+                    success:(LKLdapSuccessBlock)success
+                    failute:(LKLdapFailureBlock)failure;
 
 @end

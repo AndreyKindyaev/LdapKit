@@ -581,46 +581,25 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 }
 
 
-- (LKMessage *) ldapModifyDN:(NSString *)dn modification:(LKMod *)mod
+- (LKMessage *)ldapModifyDN:(NSString *)dn modification:(LKMod *)mod
 {
-   LKMessage * message;
-   NSArray   * mods;
-   NSAssert((dn != nil), @"dn must not be nil");
-   NSAssert((mod != nil), @"mod must not be nil");
-   @synchronized(self)
-   {
-      mods = [[NSArray alloc] initWithObjects:mod, nil];
-      message = [[LKMessage alloc] initModifyWithSession:self dn:dn mods:mods];
-      [mods release];
-      [queue addOperation:message];
-      return([message autorelease]);
-   };
+    NSAssert((dn != nil), @"dn must not be nil");
+    NSAssert((mod != nil), @"mod must not be nil");
+    return [self ldapModifyDN:dn modifications:[NSArray arrayWithObject:mod]];
 }
 
 
-- (LKMessage *) ldapModifyDN:(NSString *)dn modifications:(NSArray *)mods
+- (LKMessage *)ldapModifyDN:(NSString *)dn modifications:(NSArray *)mods
 {
-   LKMessage  * message;
-   NSUInteger   pos;
-   NSAssert((dn != nil), @"dn must not be nil");
-   NSAssert((mods != nil), @"mods must not be nil");
-   for(pos = 0; pos < [mods count]; pos++)
-      NSAssert( ( (([[mods objectAtIndex:pos] isKindOfClass:[LKMod class]])) ||
-                  (([[mods objectAtIndex:pos] isKindOfClass:[NSString class]])) ||
-                  (([[mods objectAtIndex:pos] isKindOfClass:[NSData class]])) ),
-         @"mods array must contain only NSData, NSString, or LKMod objects");
-   @synchronized(self)
-   {
-      message = [[LKMessage alloc] initModifyWithSession:self dn:dn mods:mods];
-      [queue addOperation:message];
-      return([message autorelease]);
-   };
+    return [self ldapModifyDN:dn modifications:mods success:nil failute:nil];
 }
 
 
-- (LKMessage *) ldapSearchBaseDN:(NSString *)dn scope:(LKLdapSearchScope)scope
-                filter:(NSString *)filter attributes:(NSArray *)attributes
-                attributesOnly:(BOOL)attributesOnly
+- (LKMessage *)ldapSearchBaseDN:(NSString *)dn
+                          scope:(LKLdapSearchScope)scope
+                         filter:(NSString *)filter
+                     attributes:(NSArray *)attributes
+                 attributesOnly:(BOOL)attributesOnly
 {
     return [self ldapSearchBaseDN:dn
                             scope:scope
@@ -785,6 +764,39 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
                                                     filter:filter
                                                 attributes:attributes
                                             attributesOnly:attributesOnly];
+        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [queue addOperation:message];
+        return([message autorelease]);
+    }
+}
+
+- (LKMessage *)ldapModifyDN:(NSString *)dn
+               modification:(LKMod *)mod
+                    success:(LKLdapSuccessBlock)success
+                    failute:(LKLdapFailureBlock)failure
+{
+    NSAssert((dn != nil), @"dn must not be nil");
+    NSAssert((mod != nil), @"mod must not be nil");
+    return [self ldapModifyDN:dn modifications:[NSArray arrayWithObject:mod] success:success failute:failure];
+}
+
+- (LKMessage *)ldapModifyDN:(NSString *)dn
+              modifications:(NSArray *)mods
+                    success:(LKLdapSuccessBlock)success
+                    failute:(LKLdapFailureBlock)failure
+{
+    LKMessage  * message;
+    NSUInteger   pos;
+    NSAssert((dn != nil), @"dn must not be nil");
+    NSAssert((mods != nil), @"mods must not be nil");
+    for(pos = 0; pos < [mods count]; pos++)
+        NSAssert( ( (([[mods objectAtIndex:pos] isKindOfClass:[LKMod class]])) ||
+                   (([[mods objectAtIndex:pos] isKindOfClass:[NSString class]])) ||
+                   (([[mods objectAtIndex:pos] isKindOfClass:[NSData class]])) ),
+                 @"mods array must contain only NSData, NSString, or LKMod objects");
+    @synchronized(self)
+    {
+        message = [[LKMessage alloc] initModifyWithSession:self dn:dn mods:mods];
         [self addCompletionBlockForMessage:message success:success failute:failure];
         [queue addOperation:message];
         return([message autorelease]);
