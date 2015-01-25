@@ -55,6 +55,7 @@ typedef enum ldap_kit_ldap_mod_operation LKLdapModOperation;
    LKLdapModOperation   _modOp;
    NSString           * _modType;
    NSArray            * _modValues;
+    BOOL _isStrings;
 }
 
 #pragma mark - Object Management Methods

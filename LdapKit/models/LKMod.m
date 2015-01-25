@@ -117,14 +117,22 @@
       NSAssert(((modValues)), @"modValues must not be nil for LKLdapModOperationAdd or LKLdapModOperationReplace");
    if ((modValues))
       NSAssert((([modValues count])), @"modValues must contain at least one member");
-   for(pos = 0; pos < [modValues count]; pos++)
-   {
-      object = [modValues objectAtIndex:pos];
-      NSAssert( ( (([object isKindOfClass:[LKBerValue class]])) ||
-                  (([object isKindOfClass:[NSString class]]))   ||
-                  (([object isKindOfClass:[NSData class]]))     ),
-         @"modValues must only contain LKBerValue, NSData, and NSString objects.");
-   };
+    BOOL containsString = NO;
+    BOOL containsNonStringValue = NO;
+    for(pos = 0; pos < [modValues count]; pos++) {
+        object = [modValues objectAtIndex:pos];
+        BOOL isString = [object isKindOfClass:[NSString class]];
+        BOOL isNonStringValue = [object isKindOfClass:[LKBerValue class]] || [object isKindOfClass:[NSData class]];
+        NSAssert(isString || isNonStringValue, @"modValues must only contain LKBerValue, NSData, and NSString objects.");
+        if (isString) {
+            containsString = YES;
+        }
+        if (isNonStringValue) {
+            containsNonStringValue = YES;
+        }
+        NSAssert(!containsNonStringValue || !containsString, @"modValues must only contain (LKBerValue and NSData) or NSString objects.");
+    }
+    _isStrings = containsString;
 
    if ((self = [super init]) == nil)
       return(self);
@@ -265,39 +273,47 @@
       bvals = NULL;
       if ((_modValues))
       {
-         len   = [_modValues count];
-
-         if ((bvals = malloc(sizeof(BerValue *))) == NULL)
-         {
-            [LKMod freeLDAPMod:mod];
-            [pool release];
-            return(NULL);
-         };
-         bvals[0] = NULL;
-
-         for(pos = 0; ((pos < len) && ((bvals))); pos++)
-         {
-            bval  = NULL;
-            value = [_modValues objectAtIndex:pos];
-            if (([value isKindOfClass:[LKBerValue class]]))
-               bval = [(LKBerValue *)value newBerValue];
-            else if (([value isKindOfClass:[NSData class]]))
-               bval = [LKBerValue newBerValueWithData:value];
-            else
-               bval = ber_bvstrdup([(NSString *)value UTF8String]);
-            if (!(bval))
-            {
-               [LKMod freeLDAPMod:mod];
-               [pool release];
-               return(NULL);
-            };
-            ber_bvecadd(&bvals, bval);
-         };
-      };
-
+          len   = [_modValues count];
+          if (_isStrings) {
+              char **strings = malloc(sizeof(char *) * (len + 1));
+              for (unsigned long index = 0; index < len; index++) {
+                  strings[index] = strdup([_modValues[index] UTF8String]);
+              }
+              strings[len] = NULL;
+              mod->mod_vals.modv_strvals = strings;
+          }
+          else {
+              if ((bvals = malloc(sizeof(BerValue *))) == NULL)
+              {
+                  [LKMod freeLDAPMod:mod];
+                  [pool release];
+                  return(NULL);
+              };
+              bvals[0] = NULL;
+              
+              for(pos = 0; ((pos < len) && ((bvals))); pos++)
+              {
+                  bval  = NULL;
+                  value = [_modValues objectAtIndex:pos];
+                  if (([value isKindOfClass:[LKBerValue class]]))
+                      bval = [(LKBerValue *)value newBerValue];
+                  else if (([value isKindOfClass:[NSData class]]))
+                      bval = [LKBerValue newBerValueWithData:value];
+                  else
+                      bval = ber_bvstrdup([(NSString *)value UTF8String]);
+                  if (!(bval))
+                  {
+                      [LKMod freeLDAPMod:mod];
+                      [pool release];
+                      return(NULL);
+                  };
+                  ber_bvecadd(&bvals, bval);
+              }
+              mod->mod_vals.modv_bvals = bvals;
+          }
+      }
       mod->mod_op              = _modOp;
       mod->mod_type            = strdup([_modType UTF8String]);
-      mod->mod_vals.modv_bvals = bvals;
 
       [pool release];
    };
@@ -314,13 +330,10 @@
 
 + (void) freeLDAPMod:(LDAPMod *)mod
 {
-   NSAssert((mod != NULL), @"mod must not be NULL");
-   if ((mod->mod_type))
-      free(mod->mod_type);
-   if ((mod->mod_vals.modv_bvals))
-      ber_bvecfree(mod->mod_vals.modv_bvals);
-   free(mod);
-   return;
+    NSAssert((mod != NULL), @"mod must not be NULL");
+    LDAPMod **mods = malloc(sizeof(LKMod *));
+    mods[0] = mod;
+    ldap_mods_free(mods, 1);
 }
 
 @end

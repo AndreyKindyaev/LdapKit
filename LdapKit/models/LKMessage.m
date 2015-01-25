@@ -1579,18 +1579,14 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
 }
 
 
-- (void) freeModsArray:(LDAPMod ***)modsp
+- (void)freeModsArray:(LDAPMod ***)modsp
 {
-   size_t pos;
-   if (!(modsp))
-      return;
-   if (!(*modsp))
-      return;
-   for(pos = 0; (*modsp)[pos]; pos++)
-      [LKMod freeLDAPMod:(*modsp)[pos]];
-   free(*modsp);
-   *modsp = NULL;
-   return;
+    if (nil != modsp &&
+        nil != *modsp)
+    {
+        ldap_mods_free(*modsp, 1);
+        *modsp = NULL;
+    }
 }
 
 
