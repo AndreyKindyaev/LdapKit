@@ -70,7 +70,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 
 // timeout & limit information
 @synthesize ldapSearchSizeLimit;
-@synthesize ldapSearchTimeLimit;
+@synthesize ldapOperationTimeLimit;
 @synthesize ldapNetworkTimeout;
 
 // authentication information

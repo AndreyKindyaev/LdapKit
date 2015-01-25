@@ -526,7 +526,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
 
    // timeout information
    ldapSearchSizeLimit = session.ldapSearchSizeLimit;
-   ldapSearchTimeLimit = session.ldapSearchTimeLimit;
+   ldapOperationTimeLimit = session.ldapOperationTimeLimit;
    ldapNetworkTimeout  = session.ldapNetworkTimeout;
 
    // authentication information
@@ -886,7 +886,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
       {
          // calculates search timeout
          memset(&timeout, 0, sizeof(struct timeval));
-         timeout.tv_sec  = ldapSearchTimeLimit;
+         timeout.tv_sec  = ldapOperationTimeLimit;
          timeoutp        = &timeout;
          if (!(timeout.tv_sec))
             timeoutp = NULL;
@@ -1138,7 +1138,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
    };
 
    // set LDAP search timout
-   if ((ldapSearchTimeLimit))
+   if ((ldapOperationTimeLimit))
    {
       opt = ldapSearchTimeLimit;
       err = ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &opt);
@@ -1433,7 +1433,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
       [results removeAllObjects];
 
    // sets limits
-   timeout.tv_sec  = (messageType == LKLdapMessageTypeSearch) ? session.ldapSearchTimeLimit : 0;
+   timeout.tv_sec  = session.ldapOperationTimeLimit;
    timeout.tv_usec = 0;
 
    // loops through results
@@ -1529,7 +1529,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
 
    // sets limits
    ldapSearchSizeLimit = session.ldapSearchSizeLimit;
-   timeout.tv_sec      = session.ldapSearchTimeLimit;
+   timeout.tv_sec      = session.ldapOperationTimeLimit;
    timeout.tv_usec     = 0;
    timeoutp            = &timeout;
    if (!(timeout.tv_sec))

@@ -99,7 +99,7 @@ typedef enum ldap_kit_ldap_message_type LKLdapMessageType;
 
    // timeout information
    NSInteger                ldapSearchSizeLimit;
-   NSInteger                ldapSearchTimeLimit;
+   NSInteger                ldapOperationTimeLimit;
    NSInteger                ldapNetworkTimeout;
 
    // authentication information

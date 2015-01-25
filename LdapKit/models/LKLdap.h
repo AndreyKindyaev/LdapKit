@@ -220,7 +220,7 @@ extern NSString * const LKLdapErrorDomain;
 
 /// The time limit (in seconds) after which a search operation should be
 /// terminated by the server.
-@property (nonatomic, assign)   NSInteger                ldapSearchTimeLimit;
+@property (nonatomic, assign)   NSInteger                ldapOperationTimeLimit;
 
 /// The network timeout value after which a connection fails due to no activity.
 ///
