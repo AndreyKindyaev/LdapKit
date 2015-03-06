@@ -101,6 +101,7 @@ typedef enum ldap_kit_ldap_message_type LKLdapMessageType;
    NSInteger                ldapSearchSizeLimit;
    NSInteger                ldapOperationTimeLimit;
    NSInteger                ldapNetworkTimeout;
+   NSInteger                ldapTestConnectionTimeLimit;
 
    // authentication information
    LKLdapBindMethod         ldapBindMethod;

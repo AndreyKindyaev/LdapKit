@@ -528,6 +528,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
    ldapSearchSizeLimit = session.ldapSearchSizeLimit;
    ldapOperationTimeLimit = session.ldapOperationTimeLimit;
    ldapNetworkTimeout  = session.ldapNetworkTimeout;
+   ldapTestConnectionTimeLimit = session.ldapTestConnectionTimeLimit;
 
    // authentication information
    [ldapBindWho           release];
@@ -886,7 +887,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
       {
          // calculates search timeout
          memset(&timeout, 0, sizeof(struct timeval));
-         timeout.tv_sec  = ldapOperationTimeLimit;
+         timeout.tv_sec  = ldapTestConnectionTimeLimit;
          timeoutp        = &timeout;
          if (!(timeout.tv_sec))
             timeoutp = NULL;
@@ -1140,7 +1141,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
    // set LDAP search timout
    if ((ldapOperationTimeLimit))
    {
-      opt = ldapSearchTimeLimit;
+      opt = ldapOperationTimeLimit;
       err = ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &opt);
       if (err != LDAP_SUCCESS)
       {

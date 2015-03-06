@@ -72,6 +72,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 @synthesize ldapSearchSizeLimit;
 @synthesize ldapOperationTimeLimit;
 @synthesize ldapNetworkTimeout;
+@synthesize ldapTestConnectionTimeLimit;
 
 // authentication information
 @synthesize ldapBindMethod;
@@ -551,7 +552,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 
 - (LKMessage *) ldapBind
 {
-    return [self ldapBindWithSuccess:nil failute:nil];
+    return [self ldapBindWithSuccess:nil failure:nil];
 }
 
 
@@ -591,7 +592,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 
 - (LKMessage *)ldapModifyDN:(NSString *)dn modifications:(NSArray *)mods
 {
-    return [self ldapModifyDN:dn modifications:mods success:nil failute:nil];
+    return [self ldapModifyDN:dn modifications:mods success:nil failure:nil];
 }
 
 
@@ -607,7 +608,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
                        attributes:attributes
                    attributesOnly:attributesOnly
                           success:nil
-                          failute:nil];
+                          failure:nil];
 }
 
 
@@ -686,11 +687,11 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 
 - (LKMessage *) ldapUnbind
 {
-    return [self ldapUnbindWithSuccess:nil failute:nil];
+    return [self ldapUnbindWithSuccess:nil failure:nil];
 }
 
 #pragma mark - Block based requests
-- (void)addCompletionBlockForMessage:(LKMessage *)message success:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure
+- (void)addCompletionBlockForMessage:(LKMessage *)message success:(LKLdapSuccessBlock)success failure:(LKLdapFailureBlock)failure
 {
     if (nil != success && nil != failure) {
         message.completionBlock = ^{
@@ -716,25 +717,25 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
     }
 }
 
-- (LKMessage *)ldapBindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure
+- (LKMessage *)ldapBindWithSuccess:(LKLdapSuccessBlock)success failure:(LKLdapFailureBlock)failure
 {
     LKMessage * message;
     @synchronized(self)
     {
         message = [[LKMessage alloc] initBindWithSession:self];
         message.queuePriority = NSOperationQueuePriorityHigh;
-        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [self addCompletionBlockForMessage:message success:success failure:failure];
         [queue addOperation:message];
         return([message autorelease]);
     };
 }
 
-- (LKMessage *)ldapUnbindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure
+- (LKMessage *)ldapUnbindWithSuccess:(LKLdapSuccessBlock)success failure:(LKLdapFailureBlock)failure
 {
     LKMessage * message;
     @synchronized(self) {
         message = [[LKMessage alloc] initUnbindWithSession:self];
-        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [self addCompletionBlockForMessage:message success:success failure:failure];
         [queue addOperation:message];
         return([message autorelease]);
     }
@@ -746,7 +747,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
                      attributes:(NSArray *)attributes
                  attributesOnly:(BOOL)attributesOnly
                         success:(LKLdapSuccessBlock)success
-                        failute:(LKLdapFailureBlock)failure
+                        failure:(LKLdapFailureBlock)failure
 {
     LKMessage  * message;
     NSUInteger   pos;
@@ -764,7 +765,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
                                                     filter:filter
                                                 attributes:attributes
                                             attributesOnly:attributesOnly];
-        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [self addCompletionBlockForMessage:message success:success failure:failure];
         [queue addOperation:message];
         return([message autorelease]);
     }
@@ -773,17 +774,17 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
 - (LKMessage *)ldapModifyDN:(NSString *)dn
                modification:(LKMod *)mod
                     success:(LKLdapSuccessBlock)success
-                    failute:(LKLdapFailureBlock)failure
+                    failure:(LKLdapFailureBlock)failure
 {
     NSAssert((dn != nil), @"dn must not be nil");
     NSAssert((mod != nil), @"mod must not be nil");
-    return [self ldapModifyDN:dn modifications:[NSArray arrayWithObject:mod] success:success failute:failure];
+    return [self ldapModifyDN:dn modifications:[NSArray arrayWithObject:mod] success:success failure:failure];
 }
 
 - (LKMessage *)ldapModifyDN:(NSString *)dn
               modifications:(NSArray *)mods
                     success:(LKLdapSuccessBlock)success
-                    failute:(LKLdapFailureBlock)failure
+                    failure:(LKLdapFailureBlock)failure
 {
     LKMessage  * message;
     NSUInteger   pos;
@@ -797,7 +798,7 @@ NSString * const LKLdapErrorDomain = @"LKLdapErrorDomain";
     @synchronized(self)
     {
         message = [[LKMessage alloc] initModifyWithSession:self dn:dn mods:mods];
-        [self addCompletionBlockForMessage:message success:success failute:failure];
+        [self addCompletionBlockForMessage:message success:success failure:failure];
         [queue addOperation:message];
         return([message autorelease]);
     }

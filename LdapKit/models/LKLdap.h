@@ -222,6 +222,8 @@ extern NSString * const LKLdapErrorDomain;
 /// terminated by the server.
 @property (nonatomic, assign)   NSInteger                ldapOperationTimeLimit;
 
+@property (nonatomic, assign)   NSInteger                ldapTestConnectionTimeLimit;
+
 /// The network timeout value after which a connection fails due to no activity.
 ///
 /// Setting the value to -1 results in an infinite timeout, which is the default.
@@ -388,22 +390,22 @@ extern NSString * const LKLdapErrorDomain;
 typedef void (^LKLdapSuccessBlock)(id responseObject);
 typedef void (^LKLdapFailureBlock)(NSError *error);
 
-- (LKMessage *)ldapBindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure;
-- (LKMessage *)ldapUnbindWithSuccess:(LKLdapSuccessBlock)success failute:(LKLdapFailureBlock)failure;
+- (LKMessage *)ldapBindWithSuccess:(LKLdapSuccessBlock)success failure:(LKLdapFailureBlock)failure;
+- (LKMessage *)ldapUnbindWithSuccess:(LKLdapSuccessBlock)success failure:(LKLdapFailureBlock)failure;
 - (LKMessage *)ldapSearchBaseDN:(NSString *)baseDN
                           scope:(LKLdapSearchScope)scope
                          filter:(NSString *)filter
                      attributes:(NSArray *)attributes
                  attributesOnly:(BOOL)attributesOnly
                         success:(LKLdapSuccessBlock)success
-                        failute:(LKLdapFailureBlock)failure;
+                        failure:(LKLdapFailureBlock)failure;
 - (LKMessage *)ldapModifyDN:(NSString *)dn
                modification:(LKMod *)mod
                     success:(LKLdapSuccessBlock)success
-                    failute:(LKLdapFailureBlock)failure;
+                    failure:(LKLdapFailureBlock)failure;
 - (LKMessage *)ldapModifyDN:(NSString *)dn
               modifications:(NSArray *)mods
                     success:(LKLdapSuccessBlock)success
-                    failute:(LKLdapFailureBlock)failure;
+                    failure:(LKLdapFailureBlock)failure;
 
 @end
