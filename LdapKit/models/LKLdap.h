@@ -67,8 +67,9 @@ extern NSString * const LKLdapErrorDomain;
 
    // Timeouts & Limits
    NSInteger                ldapSizeLimit;
-   NSInteger                ldapSearchTimeout;
+   NSInteger                ldapOperationTimeLimit;
    NSInteger                ldapNetworkTimeout;
+   NSInteger                ldapTestConnectionTimeLimit;
 
    // Authentication Credentials
    LKLdapBindMethod         ldapBindMethod;
