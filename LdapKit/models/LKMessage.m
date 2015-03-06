@@ -887,7 +887,7 @@ int branches_sasl_interact(LDAP * ld, unsigned flags, void * defaults, void * si
       {
          // calculates search timeout
          memset(&timeout, 0, sizeof(struct timeval));
-         timeout.tv_sec  = ldapTestConnectionTimeLimit;
+         timeout.tv_sec  = session.ldapTestConnectionTimeLimit;
          timeoutp        = &timeout;
          if (!(timeout.tv_sec))
             timeoutp = NULL;
